@@ -1,6 +1,8 @@
 # encoding: utf-8
 require 'pismo/internal_attributes'
 require 'pismo/external_attributes'
+require 'net/http'
+require 'uri'
 
 module Pismo
 
@@ -30,12 +32,21 @@ module Pismo
       @doc.to_s
     end
 
+    def open_url(url)
+      uri = URI(url)
+      response = Net::HTTP.get_response(uri)
+
+      return response.body if response.is_a?(Net::HTTPSuccess)
+
+      nil
+    end
+
     def load(handle, url = nil)
       @url = url if url
       @url = handle if handle =~ /\Ahttp/i
 
       @html = if handle =~ /\Ahttp/i
-                open(handle) { |f| f.read }
+                open_url(handle)
               elsif handle.is_a?(StringIO) || handle.is_a?(IO) || handle.is_a?(Tempfile)
                 handle.read
               else
